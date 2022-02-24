@@ -3,8 +3,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 class YCYMainWindow(QWidget):
+
     def __init__(self,parent=None):
         QMainWindow.__init__(self,parent)
+        self.path=None
         self.initUI()
 
     def initUI(self):
@@ -25,7 +27,7 @@ class YCYMainWindow(QWidget):
         self.searchLineEdit.setPlaceholderText("Find text...")
         #打开文件和关闭窗口
         self.OpenBtn=QPushButton("Files")
-        self.OpenBtn.clicked.connect(self.openfolder)#点击打开文件夹
+        self.OpenBtn.clicked.connect(self.openfolder)#点击打开文件夹并获取路径
         self.CloseBtn=QPushButton("Close")
         self.CloseBtn.clicked.connect(self.close)#点击“close”关闭窗口
 
@@ -51,12 +53,7 @@ class YCYMainWindow(QWidget):
         self.table.setShowGrid(False)
         return self.table
 
-    def openfolder(self):#点击“Files”打开文件夹(默认打开C盘)
-        import os
-        folder = r'C:/'
-        #方法：通过startfile
-        os.startfile(folder)
-
-
-
+    def openfolder(self):#点击“Files”打开文件夹
+        filePath,filetype = QFileDialog.getOpenFileName(self, "选取文件", "","*.*")
+        self.path=filePath#将文件路径赋给path
 

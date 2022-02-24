@@ -19,36 +19,43 @@ class YCYMainWindow(QWidget):
         self.setWindowTitle('DICOM')
 
     def createHboxGroupBox(self):
-        layout=QHBoxLayout()
+        self.layout=QHBoxLayout()
         #搜索框
-        searchLineEdit=QLineEdit()
-        searchLineEdit.setPlaceholderText("Find text...")
+        self.searchLineEdit=QLineEdit()
+        self.searchLineEdit.setPlaceholderText("Find text...")
         #打开文件和关闭窗口
-        OpenBtn=QPushButton("File")
-        CloseBtn=QPushButton("Close")
+        self.OpenBtn=QPushButton("Files")
+        self.OpenBtn.clicked.connect(self.openfolder)#点击打开文件夹
+        self.CloseBtn=QPushButton("Close")
+        self.CloseBtn.clicked.connect(self.close)#点击“close”关闭窗口
 
-        layout.addWidget(searchLineEdit,2)
-        layout.addStretch(5)
-        layout.addWidget(OpenBtn,1)
-        layout.addWidget(CloseBtn,1)
+        self.layout.addWidget(self.searchLineEdit,2)
+        self.layout.addStretch(5)
+        self.layout.addWidget(self.OpenBtn,1)
+        self.layout.addWidget(self.CloseBtn,1)
 
-        return layout
+        return self.layout
 
     def Table(self):
-        table=QTableWidget(100,6)#创建表格,这里后续要改为行数与文件数相同
-        table.setFrameShape(QFrame.NoFrame)#无边框的表格
-        table.horizontalHeader().setFixedHeight(50)#表头高度
-        table.horizontalHeader().setSectionResizeMode(5,QHeaderView.Stretch)  # 设置第6列宽度自动调整，充满屏幕
-        table.horizontalHeader().setStretchLastSection(True)  #设置最后一列拉伸至最大列无限延伸
-        table.setSelectionBehavior(QAbstractItemView.SelectRows)  # 设置不可选择单个单元格，只可选择一行。
-        table.setColumnCount(6)  #设置表格一共有6列
-        table.setHorizontalHeaderLabels(['Tag ID','VR','VM','Length','Description','Value'])  # 设置表头文字
-        table.setEditTriggers(QAbstractItemView.NoEditTriggers)  #设置表格不可更改
-        table.setSelectionBehavior(QAbstractItemView.SelectRows)  # 设置不可选择单个单元格，只可选择一行。
-        table.verticalHeader().setVisible(False)
-        table.setShowGrid(False)
-        return table
+        self.table=QTableWidget(100,6)#创建表格,这里后续要改为行数与文件数相同
+        self.table.setFrameShape(QFrame.NoFrame)#无边框的表格
+        self.table.horizontalHeader().setFixedHeight(50)#表头高度
+        self.table.horizontalHeader().setSectionResizeMode(5,QHeaderView.Stretch)  # 设置第6列宽度自动调整，充满屏幕
+        self.table.horizontalHeader().setStretchLastSection(True)  #设置最后一列拉伸至最大列无限延伸
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)  # 设置不可选择单个单元格，只可选择一行。
+        self.table.setColumnCount(6)  #设置表格一共有6列
+        self.table.setHorizontalHeaderLabels(['Tag ID','VR','VM','Length','Description','Value'])  # 设置表头文字
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)  #设置表格不可更改
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)  # 设置不可选择单个单元格，只可选择一行。
+        self.table.verticalHeader().setVisible(False)
+        self.table.setShowGrid(False)
+        return self.table
 
+    def openfolder(self):#点击“Files”打开文件夹(默认打开C盘)
+        import os
+        folder = r'C:/'
+        #方法：通过startfile
+        os.startfile(folder)
 
 
 

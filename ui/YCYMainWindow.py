@@ -6,44 +6,56 @@ import pydicom as pyd
 class YCYMainWindow(QWidget):
 
     updateTableSignal = pyqtSignal(str)
+    updataSearchSignal= pyqtSignal(str)
+    tableHeaderDict = {
+        'Tag ID': 0,
+        'VR': 1,
+        'VM': 2,
+        'Description': 3,
+        'Value': 4
+    }  # 为表头名称设置默认值
+    tableHeaderWidthDict = {
+        'Tag ID': 3,
+        'VR': 1,
+        'VM': 1,
+        'Description': 5,
+        'Value': 7
+    }  # 为表头宽度设置默认值
+    tableHeaderHeight=40
 
-    def __init__(self,parent=None):
+    def __init__(self,width,height,parent=None):
         QMainWindow.__init__(self,parent)
 
         self.table = None
-
         self.updateTableSignal.connect(self.updateTable)
-
-        self.tableHeaderDict = {
-            'Tag ID': 0,
-            'VR': 1,
-            'VM': 2,
-            'Description': 3,
-            'Value': 4
-        }
-
+        self.updataSearchSignal.connect(self.updataSearch)
+        self.RectWidth=width
+        self.RectHeight=height
+        self.filePath=''
         self.initUI()
 
     def initUI(self):
         mainLayout = QVBoxLayout()
         mainLayout.setContentsMargins(10,10,10,0)
         mainLayout.setSpacing(0)
+
         self.table = self.createTable()
         mainLayout.addWidget(self.table)  # 在主页面插入表格
         mainLayout.addLayout(self.createHboxGroupBoxLayout())  # 再整体插入下方的水平布局
         self.setLayout(mainLayout)
-
-        self.setGeometry(460, 230, 1000, 600)
+        self.setGeometry(self.RectWidth/4,self.RectHeight/4, self.RectWidth/2, self.RectHeight/2)
         self.setWindowTitle('DICOM')
 
     def createHboxGroupBoxLayout(self):
         layout=QHBoxLayout()
         layout.setContentsMargins(0,10,0,10)
         layout.setAlignment(Qt.AlignVCenter)
+
         #搜索框
         searchLineEdit=QLineEdit()
-
         searchLineEdit.setPlaceholderText("Find text...")
+        searchLineEdit.textChanged.connect(self.textsearch)#输入文本后自动搜索
+
         #打开文件和关闭窗口
         OpenBtn=QPushButton("Files")
         OpenBtn.clicked.connect(self.openfolder)#点击打开文件夹并获取路径
@@ -81,36 +93,50 @@ class YCYMainWindow(QWidget):
             return item
 
         for i,key in enumerate(ds._dict.keys()):
-            self.table.insertRow(i)  # 下加一行
+            self.table.insertRow(i)  # 最下面加一行
             for header in self.tableHeaderDict.keys():
                 newItem = createItem(key, header)
                 self.table.setItem(i, self.tableHeaderDict[header], newItem)
 
         self.table.sortItems(0, Qt.AscendingOrder)
 
-    def createTable(self):
-        table=QTableWidget(0,len(self.tableHeaderDict.keys()))#创建表格,这里后续要改为行数与文件数相同
+    def createTable(self):#创建表格
+        table = QTableWidget(0, len(self.tableHeaderDict.keys()))  # 创建表格,这里后续要改为行数与文件数相同
         table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         table.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
-        table.setFrameShape(QFrame.NoFrame)#无边框的表格
+        table.setFrameShape(QFrame.NoFrame)  # 无边框的表格
+        for key in self.tableHeaderDict.keys():
+            table.horizontalHeader().resizeSection(self.tableHeaderDict[key],self.width()*self.tableHeaderWidthDict[key]/sum(self.tableHeaderWidthDict.values()))
+        table.horizontalHeader().setFixedHeight(self.tableHeaderHeight)  # 表头高度
 
-        table.horizontalHeader().setFixedHeight(50)#表头高度
-        table.horizontalHeader().resizeSection(0, 150)  # 依次设施列宽
-        table.horizontalHeader().resizeSection(1, 50)
-        table.horizontalHeader().resizeSection(2, 50)
-        #self.table.horizontalHeader().resizeSection(3, 80)
-        table.horizontalHeader().resizeSection(3, 200)
-        table.horizontalHeader().resizeSection(4, 150)
-        table.horizontalHeader().setSectionResizeMode(4,QHeaderView.Stretch)  # 设置第6列宽度自动调整，充满屏幕
-        table.horizontalHeader().setStretchLastSection(True)  #设置最后一列拉伸至最大列无限延伸
+        table.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)  # 设置第6列宽度自动调整，充满屏幕
+        table.horizontalHeader().setStretchLastSection(True)  # 设置最后一列拉伸至最大列无限延伸
 
-        table.setHorizontalHeaderLabels(list(self.tableHeaderDict.keys()))  # 设置表头文字
-        table.setEditTriggers(QAbstractItemView.NoEditTriggers)  #设置表格不可更改
+        for key in self.tableHeaderDict.keys():
+            item=QTableWidgetItem()
+            item.setText(key)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            table.setHorizontalHeaderItem(self.tableHeaderDict[key], item)
+
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # 设置表格不可更改
         table.setSelectionBehavior(QAbstractItemView.SelectRows)  # 设置不可选择单个单元格，只可选择一行。
-        table.verticalHeader().setVisible(False)
-        table.setShowGrid(False)
+        table.verticalHeader().setVisible(False) #列表头不可见
+        table.setShowGrid(False) #格线不可见
         return table
 
+
     def openfolder(self):#点击“Files”打开文件夹
-        filePath,_ = QFileDialog.getOpenFileName(self, "选取文件", "","*.*")
-        self.updateTableSignal.emit(filePath)
+        self.filePath,_ = QFileDialog.getOpenFileName(self, "选取文件", "","*.*")
+        self.updateTableSignal.emit(self.filePath)
+
+    def textsearch(self,text):#在搜索框里打字
+        self.updataSearchSignal.emit(text)
+
+    def updataSearch(self,text):
+        rowsSet = set([item.row() for item in self.table.findItems(text, Qt.MatchContains)])
+
+        for i in range(self.table.rowCount()):
+            self.table.setRowHidden(i,True)
+
+        for row in rowsSet:
+            self.table.setRowHidden(row,False)
